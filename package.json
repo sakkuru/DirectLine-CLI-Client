@@ -1,0 +1,20 @@
+{
+    "name": "cli-directline-client",
+    "version": "1.0.0",
+    "description": "DirectLine Sample - CLI Client",
+    "scripts": {
+        "start": "nodemon app.js"
+    },
+    "author": "Sakkuru",
+    "license": "MIT",
+    "dependencies": {
+        "open": "0.0.5",
+        "request": "^2.79.0",
+        "request-promise": "^4.1.1",
+        "swagger-client": "^2.1.18",
+        "websocket": "^1.0.24"
+    },
+    "devDependencies": {
+        "nodemon": "^1.14.10"
+    }
+}
