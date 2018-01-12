@@ -1,5 +1,4 @@
 const Swagger = require('swagger-client');
-const open = require('open');
 const rp = require('request-promise');
 
 const directLineSecret = process.env.DLSecret;
@@ -48,7 +47,7 @@ directLineClient.then(client => {
 
 const sendMessagesFromConsole = (client, conversationId) => {
     const stdin = process.openStdin();
-    process.stdout.write('Command> ');
+    // process.stdout.write('Reply > ');
     stdin.addListener('data', e => {
         const input = e.toString().trim();
         if (input) {
@@ -56,8 +55,7 @@ const sendMessagesFromConsole = (client, conversationId) => {
                 return process.exit();
             }
 
-            // Send message
-            client.Conversations.Conversations_PostActivity({
+            const messageData = {
                 conversationId: conversationId,
                 activity: {
                     textFormat: 'plain',
@@ -68,10 +66,13 @@ const sendMessagesFromConsole = (client, conversationId) => {
                         name: directLineUserId
                     }
                 }
-            }).catch(err => {
+            }
+
+            // Send message
+            client.Conversations.Conversations_PostActivity(messageData).catch(err => {
                 console.error('Error sending message:', err);
             });
-            process.stdout.write('Command> ');
+            process.stdout.write('> ');
         }
     });
 }
@@ -97,7 +98,6 @@ const startReceivingWebSocketClient = (streamUrl, conversationId) => {
             // Ignore these messages
             if (message.type === 'utf8' && message.utf8Data.length > 0) {
                 const data = JSON.parse(message.utf8Data);
-                console.log(data)
                 printMessages(data.activities);
             }
         });
@@ -119,7 +119,7 @@ const printMessages = activities => {
             // Print other messages
             activities.forEach(printMessage);
 
-            process.stdout.write('Command> ');
+            process.stdout.write('Reply> ');
         }
     }
 }
@@ -132,12 +132,9 @@ const printMessage = activity => {
     if (activity.attachments) {
         activity.attachments.forEach(attachment => {
             switch (attachment.contentType) {
+                case "application/vnd.microsoft.card.thumbnail":
                 case "application/vnd.microsoft.card.hero":
                     renderHeroCard(attachment);
-                    break;
-                case "image/png":
-                    console.log('Opening the requested image ' + attachment.contentUrl);
-                    open(attachment.contentUrl);
                     break;
             }
         });
@@ -146,6 +143,7 @@ const printMessage = activity => {
 
 const renderHeroCard = attachment => {
     const width = 70;
+
     const contentLine = content => {
         return ' '.repeat((width - content.length) / 2) +
             content +
@@ -153,8 +151,23 @@ const renderHeroCard = attachment => {
     }
 
     console.log('/' + '*'.repeat(width + 1));
-    console.log('*' + contentLine(attachment.content.title) + '*');
-    console.log('*' + ' '.repeat(width) + '*');
-    console.log('*' + contentLine(attachment.content.text) + '*');
+    if (attachment.content.title) {
+        console.log('* ' + attachment.content.title);
+    }
+
+    if (attachment.content.buttons) {
+        const buttons = attachment.content.buttons;
+        buttons.forEach(button => {
+            let buttonText = '* ' + button.title;
+            if (button.type === 'openUrl' && button.value) {
+                buttonText += ' (' + button.value + ')';
+            }
+            console.log(buttonText);
+        });
+    } else {
+        console.log('*' + contentLine(attachment.content.title) + '*');
+        console.log('*' + ' '.repeat(width) + '*');
+        console.log('*' + contentLine(attachment.content.text) + '*');
+    }
     console.log('*'.repeat(width + 1) + '/');
 }
