@@ -154,6 +154,15 @@ const renderHeroCard = attachment => {
     if (attachment.content.title) {
         console.log('* ' + attachment.content.title);
     }
+    if (attachment.content.subtitle) {
+        console.log(' * ' + attachment.content.subtitle);
+    }
+    if (attachment.content.text) {
+        console.log('  * ' + attachment.content.text);
+    }
+    if (attachment.content.images) {
+        console.log('  * ' + attachment.content.images[0].url);
+    }
 
     if (attachment.content.buttons) {
         const buttons = attachment.content.buttons;
@@ -163,6 +172,7 @@ const renderHeroCard = attachment => {
                 buttonText += ' (' + button.value + ')';
             }
             console.log(buttonText);
+
         });
     } else {
         console.log('*' + contentLine(attachment.content.title) + '*');
